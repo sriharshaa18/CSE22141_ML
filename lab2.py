@@ -1,29 +1,51 @@
 import numpy as np
-
 import pandas as pd
 
-data = pd.read_excel(r"C:\Users\year3\Downloads\Lab Session Data.xlsx")
+# Load the data
+file_path = r"C:\Users\sriva\Desktop\exp1.csv"
+data = pd.read_csv(file_path)
 
-A = data[['Candies (#)', 'Mangoes (Kg)', 'Milk Packets (#)']].values
+# Extract relevant columns for feature matrix and target vector
+features = data[['Candies (#)', 'Mangoes (Kg)', 'Milk Packets (#)']].values
+payments = data['Payment (Rs)'].values
 
-C = data['Payment (Rs)'].values
+# Determine the dimensionality of the feature space
+num_features = features.shape[1]
+print(f"The number of features is: {num_features}")
 
-A_pinv = np.linalg.pinv(A)
+# Determine the number of data points
+num_data_points = features.shape[0]
+print(f"The number of data points is: {num_data_points}")
 
-X = A_pinv @ C
+# Calculate the rank of the feature matrix
+matrix_rank = np.linalg.matrix_rank(features)
+print(f"The rank of the feature matrix is: {matrix_rank}")
+
+# Compute the pseudo-inverse of the feature matrix
+features_pinv = np.linalg.pinv(features)
+
+# Compute the coefficients for prediction
+coefficients = features_pinv @ payments
 
 print("Coefficients for price prediction:")
+print(coefficients)
 
-print(X)
+# Input new values for prediction
+candies_qty = float(input("Enter quantity of Candies (#): "))
+mangoes_qty = float(input("Enter quantity of Mangoes (Kg): "))
+milk_packets_qty = float(input("Enter quantity of Milk Packets (#): "))
 
-value1 = float(input("Enter quantity of Candies (#): "))
+# Create a new data array for prediction
+new_data_point = np.array([[candies_qty, mangoes_qty, milk_packets_qty]])
 
-value2 = float(input("Enter quantity of Mangoes (Kg): "))
+# Predict the price using the coefficients
+predicted_payment = new_data_point @ coefficients
 
-value3 = float(input("Enter quantity of Milk Packets (#): "))
+print(f"Predicted payment: {predicted_payment[0]:.2f} Rs")
 
-new_data = np.array([[value1, value2, value3]])
+# Add a classification column based on the payment amount
+data['Classification'] = data['Payment (Rs)'].apply(lambda x: 'Rich' if x > 200 else 'Poor')
 
-predicted_price = new_data @ X
-
-print(f"Predicted price: {predicted_price[0]:.2f} Rs")
+# Print only the 'Payment (Rs)' and 'Classification' columns
+print("\nPayment and Classification:")
+print(data[['Payment (Rs)', 'Classification']])
